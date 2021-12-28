@@ -24,11 +24,12 @@ WHITE = (255, 255, 255)
 BG_COLOR = (255, 255, 204)
 SQ_COLOR = (125, 148, 93)
 
-QUEEN_IMAGE = pygame.image.load('queen.png')
-QUEEN = pygame.transform.scale(QUEEN_IMAGE, (80, 80))
-
 screen = pygame.display.set_mode((1000, HEIGHT))
 pygame.display.set_caption('8 QUEENS PROBLEM')
+
+#load queen image
+QUEEN_IMAGE = pygame.image.load('queen_yl.png').convert_alpha()
+QUEEN = pygame.transform.scale(QUEEN_IMAGE, (80, 80))
 
 #load button images
 START_BUTTON_IMG = pygame.image.load('start_btn.png').convert_alpha()
@@ -40,8 +41,7 @@ START_BUTTON = button.Button(830, 300, START_BUTTON_IMG, 0.3)
 RESTART_BUTTON = button.Button(830, 400, RESTART_BUTTON_IMG, 0.3)
 EXIT_BUTTON = button.Button(830, 500, EXIT_BUTTON_IMG, 0.3)
 
-
-
+seqs = [0] * 8
 board = np.zeros((ROWS, COLS))
 
 def draw_squares():
@@ -125,8 +125,6 @@ def Astar():
             frontier_priority_queue, key=lambda x: (x['pairs']+x['unplaced_queens']))
 
     if solution:
-        # print('Solution sequence found:' + str(solution))
-        # display_board(solution)
         return solution
     else:
         return False
@@ -158,7 +156,6 @@ def empty_file():
     f.truncate(0)
     f.close()
 
-
 def restart():
     empty_file()
     draw_squares()
@@ -185,6 +182,7 @@ while True:
 
     if RESTART_BUTTON.isClick():
         print("Restart!")
+        seqs = [0] * 8
         restart()
 
     if EXIT_BUTTON.isClick():
@@ -204,7 +202,8 @@ while True:
             clicked_row = int(mouseY // SQUARE_SIZE)
             clicked_col = int(mouseX // SQUARE_SIZE)
 
-            
+            attack = 0
+      
             if clicked_col < 8:
                 if available_square(clicked_row, clicked_col):
                     queen_remain -= 1
@@ -214,8 +213,11 @@ while True:
                                 str(clicked_row+1) + "\n")
                         f.close()
 
-                        seq = read_input()
-                        attack = attacked_queens_pairs(seq)
+                        if seqs[clicked_col] != 0:
+                            attack += 1
+
+                        seqs = read_input()
+                        attack += attacked_queens_pairs(seqs)
 
                         if attack == 0:
                             mark_square(clicked_row, clicked_col)
@@ -240,6 +242,7 @@ while True:
                                 
                 else:
                     draw_squares()
+                    seqs[clicked_col] = 0
                     queen_remain += 1
                     f = open("input.txt", "r")
                     lines = f.readlines()

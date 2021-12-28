@@ -55,22 +55,3 @@ def attacked_queens_pairs(seqs):
                 if a[t2][j] == 1:
                     n += 1  
     return int(n/2)  
-
-def display_board(seqs):
-    
-    board = np.array([0] * 81)  
-    board = board.reshape(9, 9)  
-
-    for i in range(1, 9):
-        board[seqs[i - 1]][i] = 1  
-    print('The corresponding chessboard is as follows:')
-    for i in board[1:]:
-        for j in i[1:]:
-            if j == 0: 
-                print('_ ', end="")
-            else:
-                print('Q ', end="")  
-        print() 
-
-# seq = read_input()
-# print(seq)
