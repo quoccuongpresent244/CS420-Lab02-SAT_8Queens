@@ -1,5 +1,6 @@
 # MODULES
 import pygame
+import button
 import sys
 import numpy as np
 from tkinter import *
@@ -26,26 +27,46 @@ SQ_COLOR = (125, 148, 93)
 QUEEN_IMAGE = pygame.image.load('queen.png')
 QUEEN = pygame.transform.scale(QUEEN_IMAGE, (80, 80))
 
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
+screen = pygame.display.set_mode((1000, HEIGHT))
 pygame.display.set_caption('8 QUEENS PROBLEM')
+
+#load button images
+START_BUTTON_IMG = pygame.image.load('start_btn.png').convert_alpha()
+EXIT_BUTTON_IMG = pygame.image.load('exit_btn.png').convert_alpha()
+RESTART_BUTTON_IMG = pygame.image.load('restart_btn.png').convert_alpha()
+
+#create button instances
+START_BUTTON = button.Button(830, 300, START_BUTTON_IMG, 0.3)
+RESTART_BUTTON = button.Button(830, 400, RESTART_BUTTON_IMG, 0.3)
+EXIT_BUTTON = button.Button(830, 500, EXIT_BUTTON_IMG, 0.3)
+
+
 
 board = np.zeros((ROWS, COLS))
 
 def draw_squares():
     screen.fill(BG_COLOR)
+    START_BUTTON.draw(screen)
+    RESTART_BUTTON.draw(screen)
+    EXIT_BUTTON.draw(screen)
     for row in range(ROWS):
         for col in range(row % 2, COLS, 2):
             pygame.draw.rect(screen, SQ_COLOR, (row*SQUARE_SIZE,
                              col * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+    pygame.draw.line(screen, SQ_COLOR, (802, 0), (802, 800) , width=5)
 
 
 def refresh_screen():
     screen.fill(BG_COLOR)
+    START_BUTTON.draw(screen)
+    RESTART_BUTTON.draw(screen)
+    EXIT_BUTTON.draw(screen)
     for row in range(ROWS):
         for col in range(row % 2, COLS, 2):
             pygame.draw.rect(screen, SQ_COLOR, (row*SQUARE_SIZE,
                              col * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
-    pygame.display.flip()
+    pygame.draw.line(screen, SQ_COLOR, (802, 0), (802, 800) , width=5)
+    pygame.display.update()
 
 
 def draw_queens_line(seq):
@@ -55,7 +76,7 @@ def draw_queens_line(seq):
             pos = pygame.Rect(col*SQUARE_SIZE + 10, row *
                               SQUARE_SIZE + 10, 80, 80)
             screen.blit(QUEEN, (pos.x, pos.y))
-    pygame.display.flip()
+    pygame.display.update()
 
 
 def draw_queens_file():
@@ -151,6 +172,25 @@ queen_remain = 8
 
 
 while True:
+
+    if START_BUTTON.isClick():
+        print("Running...")
+        solution = Astar()
+        if solution:
+            print("Solution has been found")
+            refresh_screen()
+            draw_queens_line(solution)
+        else:
+            print("Failed")
+
+    if RESTART_BUTTON.isClick():
+        print("Restart!")
+        restart()
+
+    if EXIT_BUTTON.isClick():
+        empty_file()
+        sys.exit()
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             empty_file()
@@ -164,68 +204,58 @@ while True:
             clicked_row = int(mouseY // SQUARE_SIZE)
             clicked_col = int(mouseX // SQUARE_SIZE)
 
-            print("Yolo")
+            
+            if clicked_col < 8:
+                if available_square(clicked_row, clicked_col):
+                    queen_remain -= 1
+                    if queen_remain > 0:
+                        f = open("input.txt", "a")
+                        f.write(str(clicked_col+1) + " " +
+                                str(clicked_row+1) + "\n")
+                        f.close()
 
-            if available_square(clicked_row, clicked_col):
-                queen_remain -= 1
-                if queen_remain > 0:
-                    f = open("input.txt", "a")
-                    f.write(str(clicked_col+1) + " " +
-                            str(clicked_row+1) + "\n")
+                        seq = read_input()
+                        attack = attacked_queens_pairs(seq)
+
+                        if attack == 0:
+                            mark_square(clicked_row, clicked_col)
+                            pos = pygame.Rect(clicked_col*SQUARE_SIZE +
+                                            10, clicked_row*SQUARE_SIZE + 10, 80, 80)
+                            screen.blit(QUEEN, (pos.x, pos.y))
+                        else:
+                            f = open("input.txt", "r")
+                            lines = f.readlines()
+                            f.close()
+
+                            f = open("input.txt", "w")
+                            remove_queen = str(clicked_col+1) + " " + str(clicked_row+1)
+                            for line in lines:
+                                if line.strip("\n") != remove_queen:
+                                    f.write(line)
+                            f.close()
+                            queen_remain += 1
+                            Tk().wm_withdraw() #to hide the main window
+                            messagebox.showerror('Error','This queen will be attacked by the previous one, please try to place another position') 
+                            
+                                
+                else:
+                    draw_squares()
+                    queen_remain += 1
+                    f = open("input.txt", "r")
+                    lines = f.readlines()
                     f.close()
 
-                    seq = read_input()
-                    attack = attacked_queens_pairs(seq)
-
-                    if attack == 0:
-                        mark_square(clicked_row, clicked_col)
-                        pos = pygame.Rect(clicked_col*SQUARE_SIZE +
-                                        10, clicked_row*SQUARE_SIZE + 10, 80, 80)
-                        screen.blit(QUEEN, (pos.x, pos.y))
-                    else:
-                        f = open("input.txt", "r")
-                        lines = f.readlines()
-                        f.close()
-
-                        f = open("input.txt", "w")
-                        remove_queen = str(clicked_col+1) + " " + str(clicked_row+1)
-                        for line in lines:
-                            if line.strip("\n") != remove_queen:
-                                f.write(line)
-                        f.close()
-                        queen_remain += 1
-                        Tk().wm_withdraw() #to hide the main window
-                        messagebox.showerror('Error','This queen will be attacked by the previous one, please try to place another position') 
-                        
-                              
-            else:
-                draw_squares()
-                queen_remain += 1
-                f = open("input.txt", "r")
-                lines = f.readlines()
-                f.close()
-
-                f = open("input.txt", "w")
-                remove_queen = str(clicked_col+1) + " " + str(clicked_row+1)
-                for line in lines:
-                    if line.strip("\n") != remove_queen:
-                        f.write(line)
-                f.close()
-                unmark_square(clicked_row, clicked_col)
-                draw_queens_file()
+                    f = open("input.txt", "w")
+                    remove_queen = str(clicked_col+1) + " " + str(clicked_row+1)
+                    for line in lines:
+                        if line.strip("\n") != remove_queen:
+                            f.write(line)
+                    f.close()
+                    unmark_square(clicked_row, clicked_col)
+                    draw_queens_file()
 
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                print("Running...")
-                solution = Astar()
-                if solution:
-                    print("Solution has been found")
-                    refresh_screen()
-                    draw_queens_line(solution)
-                else:
-                    print("Failed")
-
-            elif event.key == pygame.K_r:
+            if event.key == pygame.K_r:
                 print("Restart!")
                 restart()
 
