@@ -2,13 +2,13 @@
 import pygame
 import sys
 import numpy as np
+from tkinter import *
+from tkinter import messagebox
 
 import random
 import time
 from function import attacked_queens_pairs, read_input
-# from Astar import Astar
 
-# initializes pygame
 pygame.init()
 
 WIDTH = 800
@@ -17,36 +17,19 @@ HEIGHT = 800
 ROWS = 8
 COLS = 8
 SQUARE_SIZE = 100
-CROSS_WIDTH = 25
-SPACE = 55
+
 # rgb: red green blue
-RED = (255, 0, 0)
-BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 BG_COLOR = (255, 255, 204)
 SQ_COLOR = (125, 148, 93)
-LINE_COLOR = (23, 145, 135)
-CROSS_COLOR = (66, 66, 66)
 
 QUEEN_IMAGE = pygame.image.load('queen.png')
 QUEEN = pygame.transform.scale(QUEEN_IMAGE, (80, 80))
 
-# ------
-# SCREEN
-# ------
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption('CHESS')
+pygame.display.set_caption('8 QUEENS PROBLEM')
 
-
-# -------------
-# CONSOLE BOARD
-# -------------
 board = np.zeros((ROWS, COLS))
-
-# ---------
-# FUNCTIONS
-# ---------
-
 
 def draw_squares():
     screen.fill(BG_COLOR)
@@ -181,6 +164,8 @@ while True:
             clicked_row = int(mouseY // SQUARE_SIZE)
             clicked_col = int(mouseX // SQUARE_SIZE)
 
+            print("Yolo")
+
             if available_square(clicked_row, clicked_col):
                 queen_remain -= 1
                 if queen_remain > 0:
@@ -189,10 +174,30 @@ while True:
                             str(clicked_row+1) + "\n")
                     f.close()
 
-                    mark_square(clicked_row, clicked_col)
-                    pos = pygame.Rect(clicked_col*SQUARE_SIZE +
-                                      10, clicked_row*SQUARE_SIZE + 10, 80, 80)
-                    screen.blit(QUEEN, (pos.x, pos.y))
+                    seq = read_input()
+                    attack = attacked_queens_pairs(seq)
+
+                    if attack == 0:
+                        mark_square(clicked_row, clicked_col)
+                        pos = pygame.Rect(clicked_col*SQUARE_SIZE +
+                                        10, clicked_row*SQUARE_SIZE + 10, 80, 80)
+                        screen.blit(QUEEN, (pos.x, pos.y))
+                    else:
+                        f = open("input.txt", "r")
+                        lines = f.readlines()
+                        f.close()
+
+                        f = open("input.txt", "w")
+                        remove_queen = str(clicked_col+1) + " " + str(clicked_row+1)
+                        for line in lines:
+                            if line.strip("\n") != remove_queen:
+                                f.write(line)
+                        f.close()
+                        queen_remain += 1
+                        Tk().wm_withdraw() #to hide the main window
+                        messagebox.showerror('Error','This queen will be attacked by the previous one, please try to place another position') 
+                        
+                              
             else:
                 draw_squares()
                 queen_remain += 1
@@ -215,7 +220,7 @@ while True:
                 solution = Astar()
                 if solution:
                     print("Solution has been found")
-                    draw_squares()
+                    refresh_screen()
                     draw_queens_line(solution)
                 else:
                     print("Failed")
